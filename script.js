@@ -183,30 +183,75 @@ function closeOverlays() {
 
 /* ---------- Tree zoom ---------- */
 function setupZoom() {
-  const zoomEl = document.getElementById("tree-zoom");
+  const viewport = document.querySelector(".tree-scroll");
+  const content = document.getElementById("tree-zoom");
   const label = document.getElementById("zoom-label");
-  let scale = 0.6;
+  let scale = 1;
+  let tx = 24, ty = 24;
+
   const apply = () => {
-    zoomEl.style.transform = `scale(${scale})`;
+    content.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
     label.textContent = `${Math.round(scale * 100)}%`;
   };
+
+  // Zoom pakai scroll mouse (wheel)
+  viewport.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const rect = viewport.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const factor = e.deltaY < 0 ? 1.1 : 0.9;
+    const ns = Math.max(0.15, Math.min(2.5, scale * factor));
+    tx = mx - (mx - tx) * (ns / scale);
+    ty = my - (my - ty) * (ns / scale);
+    scale = ns;
+    apply();
+  }, { passive: false });
+
+  // Pan pakai klik + drag
+  let dragging = false, sx = 0, sy = 0, otx = 0, oty = 0;
+  viewport.addEventListener("mousedown", (e) => {
+    dragging = true;
+    sx = e.clientX; sy = e.clientY;
+    otx = tx; oty = ty;
+    viewport.classList.add("dragging");
+  });
+  window.addEventListener("mousemove", (e) => {
+    if (!dragging) return;
+    tx = otx + (e.clientX - sx);
+    ty = oty + (e.clientY - sy);
+    apply();
+  });
+  window.addEventListener("mouseup", () => {
+    dragging = false;
+    viewport.classList.remove("dragging");
+  });
+
+  // Tombol zoom +/-
   document.getElementById("zoom-in").addEventListener("click", () => {
-    scale = Math.min(1.6, scale + 0.1);
+    scale = Math.min(2.5, scale * 1.15);
     apply();
   });
   document.getElementById("zoom-out").addEventListener("click", () => {
-    scale = Math.max(0.3, scale - 0.1);
+    scale = Math.max(0.15, scale / 1.15);
     apply();
   });
-  document.getElementById("zoom-reset").addEventListener("click", () => {
-    const scrollEl = document.querySelector(".tree-scroll");
-    const contentEl = document.getElementById("tree-zoom");
-    const availW = scrollEl.clientWidth - 40;
-    const contentW = contentEl.scrollWidth || 1;
-    scale = Math.max(0.3, Math.min(1.2, availW / contentW));
+
+  // Fit: muat otomatis
+  function fit() {
+    const cw = content.scrollWidth || 1;
+    const ch = content.scrollHeight || 1;
+    const vw = viewport.clientWidth;
+    const vh = viewport.clientHeight;
+    scale = Math.max(0.1, Math.min(1, (vw - 40) / cw, (vh - 40) / ch));
+    tx = (vw - cw * scale) / 2;
+    ty = (vh - ch * scale) / 2;
     apply();
-  });
-  apply();
+  }
+  document.getElementById("zoom-reset").addEventListener("click", fit);
+
+  // Fit otomatis pas load
+  setTimeout(fit, 60);
 }
 
 /* ---------- Stats ---------- */

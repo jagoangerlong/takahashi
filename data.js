@@ -21,6 +21,14 @@ const DEFAULT_DATA = {
     death: null,
     photo: "https://api.dicebear.com/7.x/identicon/svg?seed=Ryosukein&backgroundColor=1a1a1a",
     bio: "Leluhur keluarga — ayah kandung Narzan dan Davis. Wujud tidak diketahui (siluet).",
+    spouse: {
+      id: "ventra",
+      name: "Ventra Kertanegara",
+      birth: null,
+      death: null,
+      photo: "https://api.dicebear.com/7.x/notionists/svg?seed=VentraKertanegara&backgroundColor=e6dcc4",
+      bio: "Kakek angkat (opung). Bukan marga Takahashi."
+    },
     children: [
       {
         id: "narzan",
@@ -235,14 +243,6 @@ const DEFAULT_DATA = {
         death: null,
         photo: "https://api.dicebear.com/7.x/notionists/svg?seed=GyoTakahashi&backgroundColor=e6dcc4",
         bio: "Bungsu (adik terakhir)."
-      },
-      {
-        id: "ventra",
-        name: "Ventra Kertanegara",
-        birth: null,
-        death: null,
-        photo: "https://api.dicebear.com/7.x/notionists/svg?seed=VentraKertanegara&backgroundColor=e6dcc4",
-        bio: "Kakek angkat (opung). Bukan marga Takahashi."
       }
     ]
   },
@@ -276,12 +276,12 @@ const DEFAULT_DATA = {
     {
       year: "Keluarga",
       title: "Tumbuh Menjadi 22 Bersaudara",
-      text: "Isoma bergabung sebagai saudara ketiga, disusul seorang pemuda 16 tahun yang ingin jadi yang termuda. Perlahan keluarga tumbuh — tidak semua terikat darah, tapi semua terikat pilihan."
+      text: "Setelah kembali memakai nama Takahashi, mereka perlahan menemukan saudara-saudara lain — anak-anak Ryosukein dari ibu-ibu berbeda yang dulu ditelantarkan. Satu per satu mereka bertemu karena marga yang sama, lalu memilih bergabung. Tidak semua terikat darah, tapi semua terikat pilihan."
     },
     {
       year: "Warisan",
       title: "Warisan Balap",
-      text: "Dunia otomotif dan balap jalanan tidak pernah benar-benar hilang. Bagi Takahashi, mobil adalah simbol kebebasan dan kendali atas hidup mereka sendiri."
+      text: "Di antara mereka yang bergabung, satu hal yang menyatukan: dunia otomotif dan balap jalanan. Bagi Takahashi, mobil adalah simbol kebebasan dan kendali atas hidup mereka sendiri."
     }
   ],
 
