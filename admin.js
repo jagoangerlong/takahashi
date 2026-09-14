@@ -254,11 +254,12 @@ function bindEvents() {
   // Login
   document.getElementById("login-form").addEventListener("submit", async e => {
     e.preventDefault();
-    const email = document.getElementById("login-email").value.trim();
+    let uname = document.getElementById("login-email").value.trim();
     const pass = document.getElementById("login-pass").value;
+    if (!uname.includes("@")) uname += "@takahashi.com";
     document.getElementById("login-error").textContent = "";
     try {
-      await auth.signInWithEmailAndPassword(email, pass);
+      await auth.signInWithEmailAndPassword(uname, pass);
     } catch (err) {
       document.getElementById("login-error").textContent =
         "Gagal masuk: " + err.message;
