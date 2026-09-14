@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Takahashi Family</title>
+  <style>
+    :root {
+      --ink: #1c1b1a;
+      --washi: #f2ead9;
+      --washi-deep: #e6dcc4;
+      --indigo: #2f4858;
+      --vermillion: #a63d2f;
+      --stone: #8b8378;
+      --line: rgba(28, 27, 26, 0.14);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--washi);
+      color: var(--ink);
+      font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+    }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
+    h1, h2 { margin: 0; }
+    button {
+      cursor: pointer;
+      border: 1px solid var(--line);
+      background: transparent;
+      padding: 8px 14px;
+      border-radius: 4px;
+      font-size: 14px;
+      color: var(--ink);
+    }
+    button:hover { border-color: var(--indigo); color: var(--indigo); }
+    button.primary { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+    button.primary:hover { background: #223540; }
+    button.danger { color: var(--vermillion); }
+    button.danger:hover { border-color: var(--vermillion); }
+    input, textarea, select {
+      width: 100%;
+      padding: 9px 11px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      font: inherit;
+      background: #fff;
+    }
+    label { display: block; font-size: 13px; color: var(--stone); margin-bottom: 10px; }
+    label span { display: block; margin-bottom: 4px; }
+    textarea { min-height: 70px; resize: vertical; }
+
+    /* Login */
+    .login-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 32px;
+      width: 100%;
+      max-width: 360px;
+      border-top: 3px solid var(--vermillion);
+    }
+    .card h1 { font-size: 22px; margin-bottom: 4px; }
+    .card p { color: var(--stone); font-size: 14px; }
+    .card button { width: 100%; margin-top: 8px; }
+    .err { color: var(--vermillion); font-size: 13px; min-height: 18px; }
+
+    /* Dashboard header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 28px 0 16px;
+    }
+    header h1 { font-size: 24px; }
+    .status { color: var(--stone); font-size: 13px; flex-basis: 100%; }
+
+    .tabs { display: flex; gap: 8px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+    .tabs button { border: none; border-bottom: 2px solid transparent; border-radius: 0; padding: 10px 16px; }
+    .tabs button.active { border-bottom-color: var(--vermillion); color: var(--vermillion); font-weight: 600; }
+
+    .tab { padding-bottom: 60px; }
+    .toolbar { margin-bottom: 16px; }
+
+    /* Member rows */
+    .member-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .member-row img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+    .member-row.dead img { filter: grayscale(1); }
+    .m-info { flex: 1; min-width: 0; }
+    .m-info strong { display: block; }
+    .m-info span { display: block; font-size: 13px; color: var(--stone); }
+    .m-info .m-meta { font-size: 12px; color: var(--indigo); }
+    .m-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+    /* History / gallery items */
+    .item-row {
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .item-row .i-body { flex: 1; min-width: 0; }
+    .item-row .i-title { font-weight: 600; }
+    .item-row .i-sub { font-size: 13px; color: var(--stone); }
+    .item-row img { width: 60px; height: 60px; object-fit: cover; }
+    .item-row .m-actions { display: flex; gap: 6px; }
+
+    .add-form {
+      background: var(--washi-deep);
+      border: 1px solid var(--line);
+      padding: 16px;
+      margin-bottom: 20px;
+      display: grid;
+      gap: 10px;
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(28,27,26,0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+    }
+    .modal-overlay[hidden] { display: none; }
+    .modal {
+      background: var(--washi);
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow: auto;
+      padding: 26px;
+      border-top: 3px solid var(--vermillion);
+    }
+    .modal h2 { margin-bottom: 16px; }
+    .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN VIEW -->
+  <div id="login-view" class="login-wrap" hidden>
+    <form id="login-form" class="card">
+      <h1>Admin Takahashi</h1>
+      <p>Login untuk edit data keluarga.</p>
+      <label><span>Email</span><input type="email" id="login-email" required /></label>
+      <label><span>Password</span><input type="password" id="login-pass" required /></label>
+      <p class="err" id="login-error"></p>
+      <button type="submit" class="primary">Masuk</button>
+    </form>
+  </div>
+
+  <!-- DASHBOARD VIEW -->
+  <div id="dash-view" class="wrap" hidden>
+    <header>
+      <h1>Admin — <span id="fam-name"></span></h1>
+      <div>
+        <button id="save-btn" class="primary">💾 Simpan ke cloud</button>
+        <button id="logout-btn">Logout</button>
+      </div>
+      <p class="status" id="save-status"></p>
+    </header>
+
+    <nav class="tabs">
+      <button data-tab="members" class="active">Anggota</button>
+      <button data-tab="history">History</button>
+      <button data-tab="gallery">Gallery</button>
+      <button data-tab="settings">Pengaturan</button>
+    </nav>
+
+    <!-- MEMBERS TAB -->
+    <section id="tab-members" class="tab">
+      <div class="toolbar"><button id="add-member" class="primary">+ Tambah anggota</button></div>
+      <div id="members-admin-list"></div>
+    </section>
+
+    <!-- HISTORY TAB -->
+    <section id="tab-history" class="tab" hidden>
+      <form class="add-form" id="history-form">
+        <h2 style="margin:0">Tambah event</h2>
+        <div class="row">
+          <label><span>Tahun</span><input name="year" placeholder="1928" /></label>
+          <label><span>Judul</span><input name="title" placeholder="Ichiro lahir di Nagano" /></label>
+        </div>
+        <label><span>Cerita</span><textarea name="text"></textarea></label>
+        <div class="actions"><button type="submit" class="primary">Tambah</button></div>
+      </form>
+      <div id="history-admin-list"></div>
+    </section>
+
+    <!-- GALLERY TAB -->
+    <section id="tab-gallery" class="tab" hidden>
+      <form class="add-form" id="gallery-form">
+        <h2 style="margin:0">Tambah foto</h2>
+        <label><span>URL foto</span><input name="src" placeholder="assets/xxx.jpg" /></label>
+        <label><span>Caption</span><input name="caption" placeholder="Reuni keluarga, 2024" /></label>
+        <div class="actions"><button type="submit" class="primary">Tambah</button></div>
+      </form>
+      <div id="gallery-admin-list"></div>
+    </section>
+
+    <!-- SETTINGS TAB -->
+    <section id="tab-settings" class="tab" hidden>
+      <div class="add-form">
+        <h2 style="margin:0">Pengaturan</h2>
+        <label><span>Nama keluarga</span><input id="set-name" /></label>
+        <label><span>Tagline</span><textarea id="set-tagline"></textarea></label>
+        <label><span>URL Logo (gambar/GIF/MP4, kosongkan = monogram)</span><input id="set-logo" placeholder="assets/logo.mp4" /></label>
+      </div>
+    </section>
+  </div>
+
+  <!-- MEMBER EDIT MODAL -->
+  <div id="member-modal" class="modal-overlay" hidden>
+    <div class="modal">
+      <h2 id="member-modal-title">Tambah Anggota</h2>
+      <form id="member-form">
+        <input type="hidden" name="id" />
+        <label><span>Nama lengkap</span><input name="name" required /></label>
+        <div class="row">
+          <label><span>Tanggal lahir</span><input name="birth" type="date" /></label>
+          <label><span>Tanggal wafat (kosongkan kalau hidup)</span><input name="death" type="date" /></label>
+        </div>
+        <label><span>URL foto</span><input name="photo" placeholder="assets/xxx.jpg" /></label>
+        <label><span>Deskripsi / bio</span><textarea name="bio"></textarea></label>
+        <div class="row">
+          <label><span>Orangtua (kosong = root)</span><select name="parentId"></select></label>
+          <label><span>Pasangan (opsional)</span><select name="spouseId"></select></label>
+        </div>
+        <div class="actions">
+          <button type="submit" class="primary">Simpan</button>
+          <button type="button" id="member-cancel">Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="data.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
