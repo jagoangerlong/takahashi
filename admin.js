@@ -248,48 +248,6 @@ async function saveToCloud() {
   }
 }
 
-/* ---------- Migrasi satu-klik: Ventra sejajar + label Kandung/Angkat ---------- */
-async function applyFamilyUpdate() {
-  const status = document.getElementById("save-status");
-  if (!confirm("Terapkan pembaruan?\n1. Tambah Ventra sejajar Ryosukein (bukan pasangan)\n2. Label Kandung/Angkat untuk 22 bersaudara\n\nData lain (nama, foto, tanggal) TIDAK akan diubah.")) return;
-  status.textContent = "Menerapkan pembaruan...";
-  try {
-    const snap = await contentDoc().get();
-    const d = snap.exists ? snap.data() : DEFAULT_DATA;
-    let roots = Array.isArray(d.familyTree) ? d.familyTree : (d.familyTree ? [d.familyTree] : []);
-
-    // 1. Ventra sejajar Ryosukein (root kedua, bukan pasangan)
-    if (!roots.some(r => r && r.id === "ventra")) {
-      roots.push({
-        id: "ventra",
-        name: "Ventra Kertanegara",
-        birth: null,
-        death: null,
-        photo: "https://api.dicebear.com/7.x/notionists/svg?seed=VentraKertanegara&backgroundColor=e6dcc4",
-        bio: "Kakek angkat (Opung). Bukan marga Takahashi.",
-        relation: "angkat"
-      });
-    }
-
-    // 2. Label kandung/angkat untuk 22 bersaudara (anak Ryosukein)
-    const KANDUNG = new Set(["narzan", "davis"]);
-    const root = roots.find(r => r && r.id === "ryosukein");
-    if (root && Array.isArray(root.children)) {
-      root.children.forEach(c => {
-        if (c && c.id) c.relation = KANDUNG.has(c.id) ? "kandung" : "angkat";
-      });
-    }
-
-    await contentDoc().set({ ...d, familyTree: roots });
-    status.textContent = "✅ Pembaruan diterapkan! Reload halaman untuk lihat hasil.";
-    await loadFromCloud();
-    renderAll();
-  } catch (err) {
-    console.error(err);
-    status.textContent = "❌ Gagal: " + err.message;
-  }
-}
-
 /* ---------- Auth ---------- */
 function showLogin() {
   document.getElementById("login-view").hidden = false;
@@ -324,7 +282,6 @@ function bindEvents() {
   });
 
   document.getElementById("save-btn").addEventListener("click", saveToCloud);
-  document.getElementById("apply-update-btn").addEventListener("click", applyFamilyUpdate);
 
   // Tabs
   document.querySelectorAll(".tabs button").forEach(btn => {
