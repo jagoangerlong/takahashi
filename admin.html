@@ -107,6 +107,17 @@
     .m-info strong { display: block; }
     .m-info span { display: block; font-size: 13px; color: var(--stone); }
     .m-info .m-meta { font-size: 12px; color: var(--indigo); }
+    .m-info .m-rel {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: 3px;
+      margin: 2px 0;
+      letter-spacing: 0.02em;
+    }
+    .m-info .m-rel.kandung { color: #9ecbff; border: 1px solid rgba(158,203,255,0.45); }
+    .m-info .m-rel.angkat { color: #f0b8a0; border: 1px solid rgba(240,184,160,0.45); }
     .m-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
     /* History / gallery items */
@@ -178,6 +189,7 @@
     <header>
       <h1>Admin — <span id="fam-name"></span></h1>
       <div>
+        <button id="apply-update-btn">⚡ Terapkan pembaruan</button>
         <button id="save-btn" class="primary">💾 Simpan ke cloud</button>
         <button id="logout-btn">Logout</button>
       </div>
@@ -250,6 +262,13 @@
           <label><span>Orangtua (kosong = root)</span><select name="parentId"></select></label>
           <label><span>Pasangan (opsional)</span><select name="spouseId"></select></label>
         </div>
+        <label><span>Hubungan (keterangan kandung / angkat)</span>
+          <select name="relation">
+            <option value="">— tidak ada keterangan —</option>
+            <option value="kandung">Kandung</option>
+            <option value="angkat">Angkat</option>
+          </select>
+        </label>
         <div class="actions">
           <button type="submit" class="primary">Simpan</button>
           <button type="button" id="member-cancel">Batal</button>

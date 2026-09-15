@@ -18,31 +18,39 @@ function flattenTree(node, parentId = null, out = []) {
   out.push({
     id: node.id, name: node.name, birth: node.birth, death: node.death,
     photo: node.photo, bio: node.bio, parentId,
-    spouseId: node.spouse ? node.spouse.id : null
+    spouseId: node.spouse ? node.spouse.id : null,
+    relation: node.relation || null
   });
   if (node.spouse) {
     out.push({
       id: node.spouse.id, name: node.spouse.name, birth: node.spouse.birth,
       death: node.spouse.death, photo: node.spouse.photo, bio: node.spouse.bio,
-      parentId: null, spouseId: node.id
+      parentId: null, spouseId: node.id,
+      relation: node.spouse.relation || null
     });
   }
   (node.children || []).forEach(c => flattenTree(c, node.id, out));
   return out;
 }
 
-/* ---------- Assemble (flat list -> nested tree) ---------- */
-function toNode(p) {
-  return { id: p.id, name: p.name, birth: p.birth, death: p.death, photo: p.photo, bio: p.bio };
+function flattenRoots(roots, out = []) {
+  const list = Array.isArray(roots) ? roots : (roots ? [roots] : []);
+  list.forEach(r => { if (r) flattenTree(r, null, out); });
+  return out;
 }
 
-function assembleTree(list) {
-  if (!list.length) return null;
+/* ---------- Assemble (flat list -> nested tree) ---------- */
+function toNode(p) {
+  return { id: p.id, name: p.name, birth: p.birth, death: p.death, photo: p.photo, bio: p.bio, relation: p.relation || null };
+}
+
+function assembleTrees(list) {
+  if (!list.length) return [];
   const byId = {};
   list.forEach(p => byId[p.id] = p);
   const spouseIds = new Set(list.filter(p => p.spouseId).map(p => p.spouseId));
-  const roots = list.filter(p => p.parentId == null && !spouseIds.has(p.id));
-  const root = roots[0] || list[0];
+  let roots = list.filter(p => p.parentId == null && !spouseIds.has(p.id));
+  if (!roots.length) roots = [list[0]];
 
   function build(p) {
     const node = toNode(p);
@@ -51,7 +59,7 @@ function assembleTree(list) {
     if (kids.length) node.children = kids.map(k => build(k));
     return node;
   }
-  return build(root);
+  return roots.map(build);
 }
 
 /* ---------- Helpers ---------- */
@@ -80,14 +88,14 @@ async function loadFromCloud() {
     familyLogo = d.familyLogo || "";
     history = d.familyHistory || [];
     gallery = d.galleryPhotos || [];
-    people = flattenTree(d.familyTree || DEFAULT_DATA.familyTree);
+    people = flattenRoots(d.familyTree || DEFAULT_DATA.familyTree);
   } else {
     familyName = DEFAULT_DATA.familyName;
     familyTagline = DEFAULT_DATA.familyTagline;
     familyLogo = DEFAULT_DATA.familyLogo || "";
     history = DEFAULT_DATA.familyHistory.map(x => ({ ...x }));
     gallery = DEFAULT_DATA.galleryPhotos.map(x => ({ ...x }));
-    people = flattenTree(DEFAULT_DATA.familyTree);
+    people = flattenRoots(DEFAULT_DATA.familyTree);
   }
 }
 
@@ -103,6 +111,7 @@ function renderMembers() {
       <img src="${p.photo || ""}" alt="" />
       <div class="m-info">
         <strong>${p.name}</strong>
+        ${p.relation ? `<span class="m-rel ${p.relation}">${p.relation === "kandung" ? "Kandung" : "Angkat"}</span>` : ""}
         <span>${yearsLabel(p)}${p.death ? " · Alm." : ""}</span>
         <span class="m-meta">Orangtua: ${nameOf(p.parentId)} · Pasangan: ${nameOf(p.spouseId)}</span>
       </div>
@@ -183,6 +192,7 @@ function openMemberModal(person) {
   form.bio.value = person ? (person.bio || "") : "";
   form.parentId.value = person ? (person.parentId || "") : "";
   form.spouseId.value = person ? (person.spouseId || "") : "";
+  form.relation.value = person ? (person.relation || "") : "";
   modal.hidden = false;
 }
 
@@ -201,7 +211,8 @@ function saveMemberFromForm() {
     photo: form.photo.value.trim(),
     bio: form.bio.value.trim(),
     parentId: form.parentId.value || null,
-    spouseId: form.spouseId.value || null
+    spouseId: form.spouseId.value || null,
+    relation: form.relation.value || null
   };
   const idx = people.findIndex(p => p.id === id);
   if (idx >= 0) {
@@ -218,7 +229,7 @@ async function saveToCloud() {
   const status = document.getElementById("save-status");
   status.textContent = "Menyimpan...";
   try {
-    const tree = assembleTree(people);
+    const tree = assembleTrees(people);
     familyName = document.getElementById("set-name").value.trim();
     familyTagline = document.getElementById("set-tagline").value.trim();
     familyLogo = document.getElementById("set-logo").value.trim();
@@ -234,6 +245,48 @@ async function saveToCloud() {
   } catch (err) {
     console.error(err);
     status.textContent = "❌ Gagal menyimpan: " + err.message;
+  }
+}
+
+/* ---------- Migrasi satu-klik: Ventra sejajar + label Kandung/Angkat ---------- */
+async function applyFamilyUpdate() {
+  const status = document.getElementById("save-status");
+  if (!confirm("Terapkan pembaruan?\n1. Tambah Ventra sejajar Ryosukein (bukan pasangan)\n2. Label Kandung/Angkat untuk 22 bersaudara\n\nData lain (nama, foto, tanggal) TIDAK akan diubah.")) return;
+  status.textContent = "Menerapkan pembaruan...";
+  try {
+    const snap = await contentDoc().get();
+    const d = snap.exists ? snap.data() : DEFAULT_DATA;
+    let roots = Array.isArray(d.familyTree) ? d.familyTree : (d.familyTree ? [d.familyTree] : []);
+
+    // 1. Ventra sejajar Ryosukein (root kedua, bukan pasangan)
+    if (!roots.some(r => r && r.id === "ventra")) {
+      roots.push({
+        id: "ventra",
+        name: "Ventra Kertanegara",
+        birth: null,
+        death: null,
+        photo: "https://api.dicebear.com/7.x/notionists/svg?seed=VentraKertanegara&backgroundColor=e6dcc4",
+        bio: "Kakek angkat (Opung). Bukan marga Takahashi.",
+        relation: "angkat"
+      });
+    }
+
+    // 2. Label kandung/angkat untuk 22 bersaudara (anak Ryosukein)
+    const KANDUNG = new Set(["narzan", "davis"]);
+    const root = roots.find(r => r && r.id === "ryosukein");
+    if (root && Array.isArray(root.children)) {
+      root.children.forEach(c => {
+        if (c && c.id) c.relation = KANDUNG.has(c.id) ? "kandung" : "angkat";
+      });
+    }
+
+    await contentDoc().set({ ...d, familyTree: roots });
+    status.textContent = "✅ Pembaruan diterapkan! Reload halaman untuk lihat hasil.";
+    await loadFromCloud();
+    renderAll();
+  } catch (err) {
+    console.error(err);
+    status.textContent = "❌ Gagal: " + err.message;
   }
 }
 
@@ -271,6 +324,7 @@ function bindEvents() {
   });
 
   document.getElementById("save-btn").addEventListener("click", saveToCloud);
+  document.getElementById("apply-update-btn").addEventListener("click", applyFamilyUpdate);
 
   // Tabs
   document.querySelectorAll(".tabs button").forEach(btn => {

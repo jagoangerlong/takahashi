@@ -60,6 +60,24 @@ function registerPerson(person) {
   allMembers.push(person);
 }
 
+/* familyTree bisa berupa satu objek (data lama) atau array of roots */
+function rootsOf() {
+  if (Array.isArray(familyTree)) return familyTree;
+  return familyTree ? [familyTree] : [];
+}
+
+function relationLabel(relation) {
+  if (relation === "kandung") return "Kandung";
+  if (relation === "angkat") return "Angkat";
+  return "";
+}
+
+function relationBadge(person) {
+  const label = relationLabel(person.relation);
+  if (!label) return "";
+  return `<span class="relation ${person.relation}">${label}</span>`;
+}
+
 /* ---------- Build tree HTML recursively ---------- */
 function renderUnit(person) {
   registerPerson(person);
@@ -82,6 +100,7 @@ function renderNode(person) {
     </div>
     <div class="name">${person.name}</div>
     <div class="years">${yearsLabel(person)}</div>
+    ${relationBadge(person)}
   </div>`;
 }
 
@@ -95,8 +114,10 @@ function renderSubtree(person) {
 }
 
 function buildTree() {
+  peopleById.clear();
+  allMembers = [];
   const container = document.getElementById("tree-list");
-  container.innerHTML = `<ul class="tree-list">${renderSubtree(familyTree)}</ul>`;
+  container.innerHTML = `<ul class="tree-list">${rootsOf().map(renderSubtree).join("")}</ul>`;
 }
 
 /* ---------- Members grid ---------- */
@@ -109,6 +130,7 @@ function memberCardHTML(person) {
     <div class="card-body">
       <div class="card-name">${person.name}</div>
       <div class="card-years">${yearsLabel(person)}${dead ? " · Alm." : ""}</div>
+      ${relationBadge(person)}
       <div class="card-bio">${bioShort}</div>
     </div>
   </div>`;
@@ -157,6 +179,7 @@ function openMemberModal(id) {
   <div class="modal-photo"><img src="${person.photo}" alt="${person.name}" /></div>
   <h3>${person.name}</h3>
   <div class="modal-years">${yearsLabel(person)}</div>
+  ${relationBadge(person)}
   ${dead ? `<div class="modal-status">Telah berpulang</div>` : ""}
   <p class="modal-bio">${person.bio || "Belum ada deskripsi."}</p>
   `;
@@ -258,11 +281,13 @@ function setupZoom() {
 function buildStats() {
   document.getElementById("stat-members").textContent = allMembers.length;
   const generations = new Set();
-  (function walk(person, gen) {
-    generations.add(gen);
-    if (person.spouse) generations.add(gen);
-    (person.children || []).forEach(c => walk(c, gen + 1));
-  })(familyTree, 1);
+  rootsOf().forEach(root => {
+    (function walk(person, gen) {
+      generations.add(gen);
+      if (person.spouse) generations.add(gen);
+      (person.children || []).forEach(c => walk(c, gen + 1));
+    })(root, 1);
+  });
   document.getElementById("stat-generations").textContent = generations.size;
 }
 
